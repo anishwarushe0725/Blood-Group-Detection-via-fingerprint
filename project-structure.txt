@@ -1,0 +1,24 @@
+blood_group_prediction_app/
+├── app.py                  # Main Flask application
+├── static/
+│   ├── css/
+│   │   └── style.css       # Custom styles
+│   ├── js/
+│   │   └── scripts.js      # Custom JavaScript
+│   └── images/             # Image assets
+├── templates/              # HTML templates
+│   ├── login.html
+│   ├── register.html
+│   ├── dashboard.html
+│   ├── add_patient.html
+│   ├── fingerprint.html
+│   ├── results.html
+│   └── report.html
+├── models/
+│   └── fingerprint_blood_group_model.h5  # Your trained model
+├── utils/
+│   ├── __init__.py
+│   ├── db.py               # Database operations
+│   ├── predict.py          # Prediction functionality
+│   └── auth.py             # Authentication functionality
+└── requirements.txt        # Project dependencies

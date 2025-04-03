@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Report - Blood Group Prediction System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                font-size: 14px;
+            }
+            .print-container {
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            @page {
+                size: A4;
+                margin: 0.5cm;
+            }
+        }
+        .report-header {
+            border-bottom: 2px solid #0d6efd;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+        .report-footer {
+            border-top: 1px solid #dee2e6;
+            padding-top: 10px;
+            margin-top: 30px;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    {% if not pdf_mode %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary no-print">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+                <i class="bi bi-droplet-fill me-2"></i>Blood Group Prediction
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('dashboard') }}">
+                            <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('add_patient') }}">
+                            <i class="bi bi-person-plus me-1"></i>Add Patient
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('logout') }}">
+                            <i class="bi bi-box-arrow-right me-1"></i>Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4 no-print">
+        <div class="row">
+            <div class="col-md-12 mb-4">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('results', patient_id=patient.id) }}">Results</a></li>
+                        <li class="breadcrumb-item active">Report</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+        <div class="d-flex justify-content-end mb-3">
+            <button onclick="window.print()" class="btn btn-primary me-2">
+                <i class="bi bi-printer me-2"></i>Print
+            </button>
+            <a href="{{ url_for('generate_pdf', patient_id=patient.id) }}" class="btn btn-success">
+                <i class="bi bi-file-earmark-pdf me-2"></i>Download PDF
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="container print-container mt-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="report-header">
+                    <div class="row">
+                        <div class="col-8">
+                            <h2 class="mb-0">Blood Group Prediction System</h2>
+                            <p class="text-muted">Medical Report</p>
+                        </div>
+                        <div class="col-4 text-end">
+                            <img src="{{ url_for('static', filename='images/logo.png') }}" class="img-fluid" style="max-height: 60px;" alt="Logo">
+                            <div class="mt-2">
+                                <small class="text-muted">Report Date: {{ patient.created_at }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h4 class="mb-4">Patient Information</h4>
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <table class="table table-bordered">
+                            <tbody>
+                                <tr>
+                                    <th style="width: 35%">Patient Name</th>
+                                    <td>{{ patient.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Age</th>
+                                    <td>{{ patient.age }} years</td>
+                                </tr>
+                                <tr>
+                                    <th>Gender</th>
+                                    <td>{{ patient.gender }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Weight</th>
+                                    <td>{{ patient.weight }} kg</td>
+                                </tr>
+                                <tr>
+                                    <th>Phone</th>
+                                    <td>{{ patient.phone }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Address</th>
+                                    <td>{{ patient.address }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-md-6 text-center">
+                        {% if patient.fingerprint_path %}
+                            <p class="mb-2">Fingerprint Sample</p>
+                            <img src="{{ url_for('static', filename='uploads/' + patient.fingerprint_path) }}" class="img-fluid border rounded" alt="Patient Fingerprint" style="max-height: 200px;">
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <h4 class="mb-4">Blood Group Analysis</h4>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h1 class="display-1 mb-3" style="color: #dc3545;">{{ patient.blood_group }}</h1>
+                                <p class="lead">Blood Group predicted through Fingerprint Analysis</p>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info mt-4">
+                            <p><strong>Note:</strong> This blood group has been predicted using machine learning analysis of fingerprint patterns. For medical procedures requiring absolute certainty of blood type, please confirm with a standard laboratory test.</p>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <h5>Blood Group Information:</h5>
+                            <table class="table table-bordered">
+                                <tbody>
+                                    <tr>
+                                        <th style="width: 30%">Compatibility for Receiving Blood</th>
+                                        <td>
+                                            {% if patient.blood_group == 'A+' %}
+                                                A+, A-, O+, O-
+                                            {% elif patient.blood_group == 'A-' %}
+                                                A-, O-
+                                            {% elif patient.blood_group == 'B+' %}
+                                                B+, B-, O+, O-
+                                            {% elif patient.blood_group == 'B-' %}
+                                                B-, O-
+                                            {% elif patient.blood_group == 'AB+' %}
+                                                All blood types
+                                            {% elif patient.blood_group == 'AB-' %}
+                                                A-, B-, AB-, O-
+                                            {% elif patient.blood_group == 'O+' %}
+                                                O+, O-
+                                            {% elif patient.blood_group == 'O-' %}
+                                                O-
+                                            {% else %}
+                                                Information not available
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Can Donate Blood To</th>
+                                        <td>
+                                            {% if patient.blood_group == 'A+' %}
+                                                A+, AB+
+                                            {% elif patient.blood_group == 'A-' %}
+                                                A+, A-, AB+, AB-
+                                            {% elif patient.blood_group == 'B+' %}
+                                                B+, AB+
+                                            {% elif patient.blood_group == 'B-' %}
+                                                B+, B-, AB+, AB-
+                                            {% elif patient.blood_group == 'AB+' %}
+                                                AB+
+                                            {% elif patient.blood_group == 'AB-' %}
+                                                AB+, AB-
+                                            {% elif patient.blood_group == 'O+' %}
+                                                O+, A+, B+, AB+
+                                            {% elif patient.blood_group == 'O-' %}
+                                                All blood types
+                                            {% else %}
+                                                Information not available
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="report-footer">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <p class="mb-0">This is a computer-generated report and does not require a signature. For any queries, please contact the hospital administration.</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <p class="mb-0">Report ID: BG-{{ '%05d' % patient.id }}-{{ patient.created_at.replace('-', '') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if not pdf_mode %}
+    <footer class="bg-light text-center text-muted py-3 mt-5 no-print">
+        <div class="container">
+            &copy; 2025 Blood Group Prediction System
+        </div>
+    </footer>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    {% endif %}
+</body>
+</html>

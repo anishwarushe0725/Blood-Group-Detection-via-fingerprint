@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capture Fingerprint - Blood Group Prediction System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+                <i class="bi bi-droplet-fill me-2"></i>Blood Group Prediction
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('dashboard') }}">
+                            <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('add_patient') }}">
+                            <i class="bi bi-person-plus me-1"></i>Add Patient
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('logout') }}">
+                            <i class="bi bi-box-arrow-right me-1"></i>Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0"><i class="bi bi-fingerprint me-2"></i>Fingerprint Capture</h4>
+                    </div>
+                    <div class="card-body">
+                        <ul class="nav nav-tabs mb-4" id="captureTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="upload-tab" data-bs-toggle="tab" data-bs-target="#upload" type="button" role="tab" aria-controls="upload" aria-selected="true">Upload Image</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="webcam-tab" data-bs-toggle="tab" data-bs-target="#webcam" type="button" role="tab" aria-controls="webcam" aria-selected="false">Use Scanner/Webcam</button>
+                            </li>
+                        </ul>
+                        
+                        <div class="tab-content" id="captureTabsContent">
+                            <!-- Upload Tab -->
+                            <div class="tab-pane fade show active" id="upload" role="tabpanel" aria-labelledby="upload-tab">
+                                <form action="{{ url_for('fingerprint', patient_id=patient_id) }}" method="post" enctype="multipart/form-data">
+                                    <div class="mb-4 text-center">
+                                        <img id="preview-image" src="{{ url_for('static', filename='images/fingerprint-placeholder.png') }}" class="img-fluid border rounded" style="max-height: 300px;" alt="Fingerprint Preview">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="fingerprint" class="form-label">Select Fingerprint Image</label>
+                                        <input class="form-control" type="file" id="fingerprint" name="fingerprint" accept="image/png, image/jpeg, image/jpg ,image/bmp" required onchange="previewImage(this)">
+                                        <div class="form-text">Supported formats: JPG, JPEG, PNG ,BMP</div>
+                                    </div>
+                                    
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-arrow-right-circle me-2"></i>Predict Blood Group
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                            
+                            <!-- Webcam Tab -->
+                            <div class="tab-pane fade" id="webcam" role="tabpanel" aria-labelledby="webcam-tab">
+                                <div class="text-center mb-3">
+                                    <div id="webcam-container">
+                                        <video id="webcam" autoplay playsinline width="100%" height="400" class="border rounded"></video>
+                                    </div>
+                                    <canvas id="canvas" class="d-none"></canvas>
+                                    <div id="captured-container" class="mt-3 d-none">
+                                        <img id="captured-image" class="img-fluid border rounded" style="max-height: 300px;" alt="Captured Fingerprint">
+                                    </div>
+                                </div>
+                                
+                                <div class="d-grid gap-2">
+                                    <button id="capture-btn" class="btn btn-primary">
+                                        <i class="bi bi-camera me-2"></i>Capture Fingerprint
+                                    </button>
+                                    <button id="recapture-btn" class="btn btn-secondary d-none">
+                                        <i class="bi bi-arrow-repeat me-2"></i>Recapture
+                                    </button>
+                                    <form id="webcam-form" action="{{ url_for('fingerprint', patient_id=patient_id) }}" method="post">
+                                        <input type="hidden" id="imageData" name="imageData">
+                                        <button id="predict-btn" type="submit" class="btn btn-success d-none">
+                                            <i class="bi bi-arrow-right-circle me-2"></i>Predict Blood Group
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-light text-center text-muted py-3 mt-5">
+        <div class="container">
+            &copy; 2025 Blood Group Prediction System
+        </div>
+    </footer>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Function to preview uploaded image
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    document.getElementById('preview-image').src = e.target.result;
+                }
+                
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        
+        // Webcam functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const webcamElement = document.getElementById('webcam');
+            const canvasElement = document.getElementById('canvas');
+            const captureBtn = document.getElementById('capture-btn');
+            const recaptureBtn = document.getElementById('recapture-btn');
+            const predictBtn = document.getElementById('predict-btn');
+            const webcamContainer = document.getElementById('webcam-container');
+            const capturedContainer = document.getElementById('captured-container');
+            const capturedImage = document.getElementById('captured-image');
+            const imageDataInput = document.getElementById('imageData');
+            
+            let stream = null;
+            
+            // Initialize webcam when tab is clicked
+            document.getElementById('webcam-tab').addEventListener('click', startWebcam);
+            
+            function startWebcam() {
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    navigator.mediaDevices.getUserMedia({ video: true })
+                        .then(function(mediaStream) {
+                            stream = mediaStream;
+                            webcamElement.srcObject = mediaStream;
+                            webcamElement.play();
+                        })
+                        .catch(function(error) {
+                            console.error('Could not access webcam:', error);
+                            alert('Could not access webcam. Please ensure your camera is connected and permissions are granted.');
+                        });
+                } else {
+                    alert('Your browser does not support webcam access. Please use the upload option instead.');
+                }
+            }
+            
+            // Capture image
+            captureBtn.addEventListener('click', function() {
+                if (!stream) {
+                    alert('Webcam not started. Please refresh and try again.');
+                    return;
+                }
+                
+                // Set canvas dimensions to match video
+                canvasElement.width = webcamElement.videoWidth;
+                canvasElement.height = webcamElement.videoHeight;
+                
+                // Draw video frame to canvas
+                canvasElement.getContext('2d').drawImage(webcamElement, 0, 0, canvasElement.width, canvasElement.height);
+                
+                // Convert canvas to data URL
+                const imageDataUrl = canvasElement.toDataURL('image/png');
+                
+                // Display captured image
+                capturedImage.src = imageDataUrl;
+                webcamContainer.classList.add('d-none');
+                capturedContainer.classList.remove('d-none');
+                
+                // Update hidden input with image data
+                imageDataInput.value = imageDataUrl;
+                
+                // Toggle buttons
+                captureBtn.classList.add('d-none');
+                recaptureBtn.classList.remove('d-none');
+                predictBtn.classList.remove('d-none');
+            });
+            
+            // Recapture button
+            recaptureBtn.addEventListener('click', function() {
+                webcamContainer.classList.remove('d-none');
+                capturedContainer.classList.add('d-none');
+                
+                captureBtn.classList.remove('d-none');
+                recaptureBtn.classList.add('d-none');
+                predictBtn.classList.add('d-none');
+                
+                imageDataInput.value = '';
+            });
+            
+            // Clean up on tab switch
+            document.getElementById('upload-tab').addEventListener('click', stopWebcam);
+            
+            function stopWebcam() {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    stream = null;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
